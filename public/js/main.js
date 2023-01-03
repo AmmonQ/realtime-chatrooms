@@ -33,7 +33,7 @@ socket.on('message', message => {
 socket.on('typing message', message => {
     outputTypingMessage(message);
 
-    window.setTimeout(clearTypingMessage, 1000);
+    window.setTimeout(clearTypingMessage, 500);
 })
 
 // message submit
@@ -81,7 +81,12 @@ function outputUsers(users) {
 }
 
 function outputTypingMessage(message) {
-    typingMessage.innerText = message;
+    // more than one person is typing
+    if (typingMessage.innerText !== '') {
+        typingMessage.innerText = 'More than one person is the chat is typing...';
+    } else {
+        typingMessage.innerText = message;
+    }
 }
 
 function clearTypingMessage() {
