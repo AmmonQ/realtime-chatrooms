@@ -10,7 +10,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-let chatBot = 'ChatCord bot';
+let chatBot = '<i class="fa-solid fa-robot"></i> chatbot';
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,7 +21,7 @@ io.on('connection', socket => {
         socket.join(user.room);
 
         // welcome current user
-        socket.emit('message', formatMessage(chatBot, 'Welcome to ChatCord'));
+        socket.emit('message', formatMessage(chatBot, 'Welcome to Realtime Chat with Socket.io'));
 
         // load messages for current user
         const db = new sqlite3.Database('chat.db');
