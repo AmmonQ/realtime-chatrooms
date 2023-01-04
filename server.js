@@ -2,6 +2,7 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
+const sqlite3 = require('sqlite3').verbose()
 const formatMessage = require('./utils/messages');
 const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
 
@@ -21,6 +22,20 @@ io.on('connection', socket => {
 
         // welcome current user
         socket.emit('message', formatMessage(chatBot, 'Welcome to ChatCord'));
+
+        // load messages for current user
+        const db = new sqlite3.Database('chat.db');
+
+        db.all('SELECT * FROM messages WHERE room = ?', [user.room], (err, rows) => {
+            if (err) {
+                throw err;
+            }
+            rows.forEach((row) => {
+                socket.emit('message', formatMessage(row.from_user, row.message));
+            });
+        });
+
+        db.close()
 
         // broadcast when a user connects
         socket.broadcast.to(user.room).emit('message', formatMessage(chatBot, `${user.username} has joined the chat`));
@@ -47,7 +62,16 @@ io.on('connection', socket => {
 
     // listen for chatMessage
     socket.on('chatMessage', (msg) => {
+        const db = new sqlite3.Database('chat.db');
+
         const user = getCurrentUser(socket.id);
+
+        db.serialize(() => {
+            db.run('INSERT INTO messages (from_user, message, room) VALUES (?, ?, ?)',
+                [user.username, msg, user.room], function(err) { console.log(err) });
+        });
+
+        db.close();
 
         io.to(user.room).emit('message', formatMessage(user.username, msg));
     });
